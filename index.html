@@ -572,6 +572,9 @@
     <div class="contact-form">
       <h3>Send Us a Message</h3>
       <form id="contactForm" onsubmit="handleSubmit(event)">
+        <input type="hidden" name="access_key" value="3276bc0e-ee4c-4ebe-953b-33f12ab34cc8" />
+        <input type="hidden" name="subject" value="New Enquiry — Box Frame Studio Website" />
+        <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
         <div class="form-row">
           <div class="form-group">
             <label for="fname">First Name</label>
@@ -668,16 +671,43 @@
   // Contact form
   function handleSubmit(e) {
     e.preventDefault();
-    const btn = e.target.querySelector('.btn-submit');
-    btn.textContent = 'Message Sent ✓';
-    btn.style.background = '#4caf50';
-    btn.style.color = '#fff';
-    e.target.reset();
-    setTimeout(() => {
-      btn.textContent = 'Send Message';
-      btn.style.background = '';
-      btn.style.color = '';
-    }, 4000);
+    const form = e.target;
+    const btn = form.querySelector('.btn-submit');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(Object.fromEntries(new FormData(form)))
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          btn.textContent = 'Message Sent ✓';
+          btn.style.background = '#4caf50';
+          btn.style.color = '#fff';
+          form.reset();
+        } else {
+          btn.textContent = 'Something went wrong — try again';
+          btn.style.background = '#c0392b';
+          btn.style.color = '#fff';
+        }
+      })
+      .catch(() => {
+        btn.textContent = 'Network error — try again';
+        btn.style.background = '#c0392b';
+        btn.style.color = '#fff';
+      })
+      .finally(() => {
+        btn.disabled = false;
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 4000);
+      });
   }
 
   // Sticky nav shrink on scroll
